@@ -1,6 +1,20 @@
 import type { AssistantMessage, Part, UserMessage } from "@opencode-ai/sdk/v2"
 import { Locale } from "@/util/locale"
 
+type Client = {
+  session: {
+    messages: (args: { sessionID: string; limit?: number }) => Promise<{
+      data?: Array<{ info: UserMessage | AssistantMessage; parts: Part[] }>
+    }>
+  }
+}
+
+// Pre-compaction messages fall outside the TUI's 100-entry rendering store.
+export async function fetchTranscriptMessages(client: Client, sessionID: string): Promise<MessageWithParts[]> {
+  const result = await client.session.messages({ sessionID })
+  return (result.data ?? []).map((msg) => ({ info: msg.info, parts: msg.parts }))
+}
+
 export type TranscriptOptions = {
   thinking: boolean
   toolDetails: boolean
